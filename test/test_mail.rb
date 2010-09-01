@@ -355,8 +355,8 @@ Content-Type: text/plain; charset=iso-8859-1
 The body
 EOF
     mail = TMail::Mail.parse(msg)
-    expected = "testing testing \326\244" 
-    expected.force_encoding 'utf-8' if expected.respond_to? :force_encoding 
+    expected = "testing testing \326\244"
+    expected.force_encoding 'utf-8' if expected.respond_to? :force_encoding
     assert_equal expected, mail.subject
     assert_equal "=?utf-8?Q?testing_testing_=D6=A4?=", mail.quoted_subject
   end
@@ -752,5 +752,12 @@ EOF
     mail.preamble = 'This is the preamble'
     assert(mail.encoded =~ /\r\n\r\nThis is the preamble\r\n--mimepart/)
   end
-  
+
+=begin
+  def test_yahoo_multipart_email
+    mail = TMail::Mail.load("#{File.dirname(__FILE__)}/fixtures/raw_email_with_content_type_problem")
+    assert_equal(true, mail.multipart?)
+    assert_equal("text/html", mail.parts[1].content_type)
+  end
+=end
 end
