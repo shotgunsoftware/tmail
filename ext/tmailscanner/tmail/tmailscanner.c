@@ -62,8 +62,12 @@ struct scanner
 #define RECV_MODE_P(s)     ((s)->flags & MODE_RECV)
 #define ISO2022_MODE_P(s)  ((s)->flags & MODE_ISO2022)
 
+#ifndef HAVE_RB_DATA_TYPE_T_FUNCTION
 #define GET_SCANNER(val, s) Data_Get_Struct(val, struct scanner, s)
 #define MAKE_SCANNER(klass, s) Data_Make_Struct(klass, struct scanner, 0, -1, sc)
+#else
+#define GET_SCANNER(val, s) TypedData_Get_Struct(val, struct scanner, &mails_type, s)
+#define MAKE_SCANNER(klass, s) TypedData_Make_Struct(klass, struct scanner, &mails_type, s)
 
 
 static void
@@ -73,6 +77,19 @@ mails_mark(ptr)
     struct scanner *sc = ptr;
     rb_gc_mark(sc->comments);
 }
+
+static size_t
+mails_memsize(ptr)
+    const void *ptr;
+{
+    return ptr ? sizeof(struct scanner) : 0;
+}
+
+static const rb_data_type_t mails_type = {
+    "TMailScanner",
+    {mails_mark, RUBY_TYPED_DEFAULT_FREE, mails_memsize,},
+};
+#endif
 
 #ifndef StringValue
 #  define StringValue(s) Check_Type(str, T_STRING);
