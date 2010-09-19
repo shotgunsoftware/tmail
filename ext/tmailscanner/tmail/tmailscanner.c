@@ -25,16 +25,15 @@
 #define RSTRING_LEN(obj) RSTRING(obj)->len
 #endif
 
-#ifdef HAVE_RUBY_VM_H
+#ifdef HAVE_RUBY_RE_H
 #include "ruby/re.h"
-#include "ruby/encoding.h"
 #else
 #include "re.h"
 #endif
 
-#ifdef HAVE_RUBY_VM_H
-const unsigned char *re_mbctab;
-#define ismbchar(c) re_mbctab[(unsigned char)(c)]
+#ifdef HAVE_RUBY_ENCODING_H
+#include "ruby/encoding.h"
+#define ismbchar(c) (!rb_enc_isascii((unsigned char)(c),NULL))
 #endif
 
 #define TMAIL_VERSION "1.2.3"
@@ -49,6 +48,9 @@ struct scanner
     char *pend;
     unsigned int flags;
     VALUE comments;
+#ifdef HAVE_RUBY_ENCODING_H
+    rb_encoding *enc;
+#endif
 };
 
 #define MODE_MIME     (1 << 0)
@@ -76,6 +78,20 @@ mails_mark(ptr)
 #  define StringValue(s) Check_Type(str, T_STRING);
 #endif
 
+static int
+is_japanese(str)
+    VALUE str;
+{
+#ifdef HAVE_RUBY_ENCODING_H
+    rb_encoding *enc = rb_enc_get(str);
+    const char *name = rb_enc_name(enc);
+    return strcmp(name, "ISO-2022-JP") == 0;
+#else
+    const char *tmp = rb_get_kcode();
+    return strcmp(tmp, "EUC") == 0 || strcmp(tmp, "SJIS") == 0;
+#endif
+}
+
 /*
  * Document-method: mails_init
  *
@@ -95,6 +111,9 @@ mails_init(obj, str, ident, cmt)
     sc->pbeg = RSTRING_PTR(str);
     sc->p    = sc->pbeg;
     sc->pend = sc->p + RSTRING_LEN(str);
+#ifdef HAVE_RUBY_ENCODING_H
+    sc->enc = rb_enc_get(str);
+#endif
 
     sc->flags = 0;
     Check_Type(ident, T_SYMBOL);
@@ -104,8 +123,7 @@ mails_init(obj, str, ident, cmt)
     else if (strcmp(tmp, "CENCODING")    == 0) sc->flags |= MODE_MIME;
     else if (strcmp(tmp, "CDISPOSITION") == 0) sc->flags |= MODE_MIME;
 
-    tmp = rb_get_kcode();
-    if (strcmp(tmp, "EUC") == 0 || strcmp(tmp, "SJIS") == 0) {
+    if (is_japanese(str)) {
         sc->flags |= MODE_ISO2022;
     }
 
@@ -217,29 +235,20 @@ skip_iso2022jp_string(sc)
     }
 }
 
-#ifdef HAVE_RUBY_VM_H
-static void
-skip_japanese_string(sc)
-  struct scanner *sc;
-{
-  while(sc->p < sc->pend) {
-	if (! ismbchar(*sc->p)) return;
-	rb_encoding *enc = rb_enc_get(sc);
-	sc->p += mbclen(sc->p, sc->pend, enc);
-  }
-}  
-#else
 static void
 skip_japanese_string(sc)
     struct scanner *sc;
 {
     while (sc->p < sc->pend) {
+#ifdef HAVE_RUBY_ENCODING_H
+        if (! ismbchar(*sc->p)) return;
+	sc->p += mbclen(sc->p, sc->pend, sc->enc);
+#else
         if (! ismbchar(*sc->p)) return;
         sc->p += mbclen(*sc->p);
+#endif
     }
 }
-#endif
-
 
 #define scan_atom(sc) scan_word(sc, ATOM_SYMBOLS)
 #define scan_token(sc) scan_word(sc, TOKEN_SYMBOLS)
