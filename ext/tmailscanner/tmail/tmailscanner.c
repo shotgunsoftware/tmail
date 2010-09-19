@@ -61,13 +61,15 @@ struct scanner
 #define ISO2022_MODE_P(s)  ((s)->flags & MODE_ISO2022)
 
 #define GET_SCANNER(val, s) Data_Get_Struct(val, struct scanner, s)
+#define MAKE_SCANNER(klass, s) Data_Make_Struct(klass, struct scanner, 0, -1, sc)
 
 
 static void
-mails_free(sc)
-    struct scanner *sc;
+mails_mark(ptr)
+    void *ptr;
 {
-    free(sc);
+    struct scanner *sc = ptr;
+    rb_gc_mark(sc->comments);
 }
 
 #ifndef StringValue
@@ -75,19 +77,19 @@ mails_free(sc)
 #endif
 
 /*
- * Document-method: mails_s_new
+ * Document-method: mails_init
  *
  * Creates a new mail
  *
  */
 static VALUE
-mails_s_new(klass, str, ident, cmt)
-    VALUE klass, str, ident, cmt;
+mails_init(obj, str, ident, cmt)
+    VALUE obj, str, ident, cmt;
 {
     struct scanner *sc;
     const char *tmp;
 
-    sc = ALLOC_N(struct scanner, 1);
+    GET_SCANNER(obj, sc);
 
     StringValue(str);
     sc->pbeg = RSTRING_PTR(str);
@@ -113,8 +115,25 @@ mails_s_new(klass, str, ident, cmt)
         sc->comments = cmt;
     }
 
-    return Data_Wrap_Struct(TMailScanner, 0, mails_free, sc);
+    return obj;
 }
+
+static VALUE
+mails_s_alloc(klass)
+    VALUE klass;
+{
+    struct scanner *sc;
+    return MAKE_SCANNER(klass, sc);
+}
+
+#ifndef HAVE_RB_DEFINE_ALLOC_FUNC
+static VALUE
+mails_s_new(klass, str, ident, cmt)
+    VALUE klass, str, ident, cmt;
+{
+    return mails_init(mails_s_alloc(klass), str, ident, cmt);
+}
+#endif
 
 /*
  * Document-method: mails_debug_get
@@ -586,7 +605,12 @@ Init_tmailscanner()
     rb_obj_freeze(tmp);
     rb_define_const(TMailScanner, "Version", tmp);
 
+#ifdef HAVE_RB_DEFINE_ALLOC_FUNC
+    rb_define_alloc_func(TMailScanner, mails_s_alloc);
+    rb_define_method(TMailScanner, "initialize", mails_init, 3);
+#else
     rb_define_singleton_method(TMailScanner, "new", mails_s_new, 3);
+#endif
     rb_define_method(TMailScanner, "scan", mails_scan, 0);
     rb_define_method(TMailScanner, "debug", mails_debug_get, 0);
     rb_define_method(TMailScanner, "debug=", mails_debug_set, 1);
