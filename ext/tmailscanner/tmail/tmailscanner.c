@@ -228,9 +228,9 @@ skip_japanese_string(sc)
 static VALUE
 scan_word(sc, syms)
     struct scanner *sc;
-    char *syms;
+    const char *syms;
 {
-    char *beg = sc->p;
+    const char *beg = sc->p;
 
     while (sc->p < sc->pend) {
         if (ISO2022_MODE_P(sc) && *sc->p == ESC) {
@@ -390,7 +390,7 @@ skip_lwsp(sc)
 
 static int
 nccmp(a, b)
-    char *a, *b;
+    const char *a, *b;
 {
     while (*a && *b) {
         if ((*a != *b) && (TO_LOWER(*a) != TO_LOWER(*b)))
@@ -556,7 +556,7 @@ mails_scan(self)
 
 static VALUE
 cstr2symbol(str)
-    char *str;
+    const char *str;
 {
     ID tmp;
 
