@@ -582,6 +582,9 @@ mails_scan(self)
 ------------------------------------------------------------------
 */
 
+#ifdef rb_intern_const
+#define cstr2symbol(str) ID2SYM(rb_intern_const(str))
+#else
 static VALUE
 cstr2symbol(str)
     const char *str;
@@ -595,6 +598,7 @@ cstr2symbol(str)
     return INT2FIX(tmp);
 #endif
 }
+#endif
 
 void
 Init_tmailscanner()
