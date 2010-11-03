@@ -104,7 +104,7 @@ class AddressHeaderTester < Test::Unit::TestCase
     assert_equal to_s, h.to_s,                 str.inspect + " (to_s)\n" if to_s
     assert_equal to_s, h.decoded,              str.inspect + " (decoded)\n" if to_s
   end
-    
+
   def test_ATTRS
     validate_case 'aamine@loveruby.net',
         false,
@@ -271,7 +271,7 @@ class MessageIdHeaderTester < Test::Unit::TestCase
     assert_not_nil h.id
     assert_equal str, h.id
   end
-  
+
   def test_double_at_in_header
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email_double_at_in_header")
     str = '<d3b8cf8e49f0448085@0c28713a1@f473e@37signals.com>'
@@ -468,7 +468,7 @@ Received: by mebius with Microsoft Mail
       'with ESMTP',
       'id LKJHSDFG',
       'for <aamine@loveruby.net>',
-      "; #{time}" 
+      "; #{time}"
     ]\
     .each do |str|
       h = TMail::HeaderField.new('Received', str)
@@ -595,7 +595,15 @@ class ContentTypeHeaderTester < Test::Unit::TestCase
     assert_equal 1, h.params.size
     assert_equal 'shift_jis', h.params['charset']
   end
-  
+
+  def test_attrs_with_newlines
+    h = TMail::HeaderField.new('Content-Type', "application/octet-stream; name=\n \"Rapport_Journal_de_4_14_octobre_2010.pdf\"")
+    assert_equal 'application', h.main_type
+    assert_equal 'octet-stream', h.sub_type
+    assert_equal 1, h.params.size
+    assert_equal 'Rapport_Journal_de_4_14_octobre_2010.pdf', h.params['name']
+  end
+
   def test_multipart_with_legal_unquoted_boundary
     h = TMail::HeaderField.new('Content-Type', 'multipart/mixed; boundary=dDRMvlgZJXvWKvBx')
     assert_equal 'multipart', h.main_type
@@ -603,7 +611,7 @@ class ContentTypeHeaderTester < Test::Unit::TestCase
     assert_equal 1, h.params.size
     assert_equal 'dDRMvlgZJXvWKvBx', h.params['boundary']
   end
-  
+
   def test_multipart_with_legal_quoted_boundary_should_retain_quotations
     h = TMail::HeaderField.new('Content-Type', 'multipart/mixed; boundary="dDRMvlgZJXvWKvBx"')
     assert_equal 'multipart', h.main_type
@@ -619,7 +627,7 @@ class ContentTypeHeaderTester < Test::Unit::TestCase
     assert_equal 1, h.params.size
     assert_equal '----=_=NextPart_000_0093_01C81419.EB75E850', h.params['boundary']
   end
-  
+
   def test_multipart_with_illegal_quoted_boundary_should_retain_quotations
     h = TMail::HeaderField.new('Content-Type', 'multipart/alternative; boundary="----=_=NextPart_000_0093_01C81419.EB75E850"')
     assert_equal 'multipart', h.main_type
@@ -668,7 +676,7 @@ class ContentEncodingHeaderTester < Test::Unit::TestCase
   def test_encoding
     h = TMail::HeaderField.new('Content-Transfer-Encoding', 'Base64')
     assert_equal 'base64', h.encoding
-    
+
     h = TMail::HeaderField.new('Content-Transfer-Encoding', '7bit')
     assert_equal '7bit', h.encoding
   end
@@ -686,7 +694,7 @@ class ContentEncodingHeaderTester < Test::Unit::TestCase
     assert_equal h.to_s, h.decoded
     assert_equal h.to_s, h.encoded
   end
-  
+
   def test_insertion_of_headers_and_encoding_them_short
     mail = TMail::Mail.new
     mail['X-Mail-Header'] = "short bit of data"
@@ -777,6 +785,14 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     end
   end
 
+  def test_attrs_with_newlines
+    h = TMail::HeaderField.new('Content-Disposition', "attachment; filename=\n \"Rapport_Journal_de_4_14_octobre_2010.pdf\"")
+    assert_equal 'attachment', h.disposition
+    assert_equal 1, h.params.size
+    assert_equal 'Rapport_Journal_de_4_14_octobre_2010.pdf', h.params['filename']
+  end
+
+
   def _test_ATTRS
     TMail.KCODE = 'NONE'
 
@@ -791,7 +807,7 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     assert_equal 'attachment', h.disposition
     assert_equal 1, h.params.size
     assert_equal 'README.txt.pif', h.params['filename']
-    
+
     h = TMail::HeaderField.new('Content-Disposition',
                                'attachment; filename=')
     assert_equal true, h.empty?
@@ -822,7 +838,7 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
 
     h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
     h['n'] = "\245\265\245\363\245\327\245\353.txt"
-    assert_equal "a; n*=iso-2022-jp'ja'%1B$B%255%25s%25W%25k%1B%28B.txt", 
+    assert_equal "a; n*=iso-2022-jp'ja'%1B$B%255%25s%25W%25k%1B%28B.txt",
                 h.encoded
 
     h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
@@ -842,9 +858,9 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
 
     expected = "\306\374\313\334\270\354.doc"
     expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
-    
+
     assert_equal expected, h.params['filename']
-    
+
     # raw iso2022jp string in value (quoted string)
     h = TMail::HeaderField.new('Content-Disposition',
             %Q<attachment; filename="\e$BF|K\\8l\e(B.doc">)
@@ -922,7 +938,7 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     h.disposition = 'AtTaChMeNt'
     assert_equal 'attachment', h.disposition
   end
-  
+
   def test_wrong_mail_header
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email9")
     assert_raise(TMail::SyntaxError) { TMail::Mail.parse(fixture) }
@@ -951,7 +967,7 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     h = TMail::HeaderField.new_from_port(p, 'EnvelopeSender')
     assert_equal("mike@envelope_sender.com.au", h.addrs.join)
   end
-  
+
   def test_new_from_port_should_produce_a_header_object_that_contains_the_right_data
     p = TMail::FilePort.new("#{File.dirname(__FILE__)}/fixtures/mailbox")
     h = TMail::HeaderField.new_from_port(p, 'From')
@@ -968,7 +984,7 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     assert(line =~ /micalg=sha1/)
     assert_equal(line.length, 103)
   end
-  
+
   def test_returning_nil_if_there_is_no_match
     p = TMail::FilePort.new("#{File.dirname(__FILE__)}/fixtures/mailbox")
     h = TMail::HeaderField.new_from_port(p, 'Received-Long-Header')
@@ -1007,7 +1023,7 @@ Content-Transfer-Encoding: Base64
 Content-Disposition: attachment
 
 ENDSTRING
-    
+
     mail = TMail::Mail.parse(mailsrc)
     assert_equal(result.gsub("\n", "\r\n"), mail.encoded)
   end
