@@ -34,7 +34,7 @@ require 'tmail/utils'
 
 
 module TMail
-  
+
   #:stopdoc:
   class << self
     attr_accessor :KCODE
@@ -62,12 +62,12 @@ module TMail
     # You should call this before you are packaging up your  email to
     # correctly escape all the values that need escaping in the email, line
     # wrap the email etc.
-    # 
+    #
     # It is also a good idea to call this before you marshal or serialize
     # a TMail object.
-    # 
+    #
     # For Example:
-    # 
+    #
     #  email = TMail::Load(my_email_file)
     #  email_to_send = email.encoded
     def encoded( eol = "\r\n", charset = 'j', dest = nil )
@@ -76,13 +76,13 @@ module TMail
 
     # Returns the TMail object decoded and ready to be used by you, your
     # program etc.
-    # 
+    #
     # You should call this before you are packaging up your  email to
     # correctly escape all the values that need escaping in the email, line
     # wrap the email etc.
-    # 
+    #
     # For Example:
-    # 
+    #
     #  email = TMail::Load(my_email_file)
     #  email_to_send = email.encoded
     def decoded( eol = "\n", charset = 'e', dest = nil )
@@ -340,7 +340,7 @@ module TMail
       types = ''
       strs = []
       if str.respond_to?(:encoding)
-        enc = str.encoding 
+        enc = str.encoding
         str.force_encoding(Encoding::ASCII_8BIT)
       end
       until str.empty?
@@ -553,16 +553,15 @@ module TMail
     end
 
     def fold_the_string
+      @text.strip!
       whitespace_location = @text =~ /\s/ || @text.length
       # Is the location of the whitespace shorter than the RCF_2822_MAX_LENGTH?
       # if there is no whitespace in the string, then this
       unless mazsize(whitespace_location) <= 0
-        @text.strip!
         @wrapped_text << @text.slice!(0...whitespace_location)
       # If it is not less, we have to wrap it destructively
       else
         slice_point = RFC_2822_MAX_LENGTH - @curlen - @lwsp.length
-        @text.strip!
         @wrapped_text << @text.slice!(0...slice_point)
       end
     end

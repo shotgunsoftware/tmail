@@ -21,11 +21,11 @@ class TestMail < Test::Unit::TestCase
 
   def test_MIME
     # FIXME: test more.
-    
+
     kcode('EUC') {
       mail = TMail::Mail.parse('From: hoge@example.jp (=?iso-2022-jp?B?GyRCJUYlOSVIGyhC?=)')
       assert_not_nil mail['From']
-      
+
       expected = "\245\306\245\271\245\310"
       if expected.respond_to? :force_encoding
         expected.force_encoding(mail['From'].comments.first.encoding)
@@ -57,6 +57,13 @@ EOS
     # strip to avoid error by body's line terminator.
     assert_equal lf(str).strip, m.decoded.strip
     assert_equal crlf(str).strip, m.encoded.strip
+  end
+
+  def test_do_not_fold_on_blank_lines
+    mail     = TMail::Mail.parse("To: =?utf-8?Q?=D0=94=D0=BE=D0=BD=D1=87=D0=B5=D0=BD=D0=BA=D0=BE_=D0=A2=D0=B0?= =?utf-8?Q?=D1=82=D1=8C=D1=8F=D0=BD=D0=B0_=D0=9B=D0=B5=D0=BE=D0=BF=D0=BE?= =?utf-8?Q?=D0=BB=D1=8C=D0=B4=D0=BE=D0=B2=D0=BD=D0=B0?= <eac@example.com>")
+    expected = "To: =?utf-8?Q?=D0=94=D0=BE=D0=BD=D1=87=D0=B5=D0=BD=D0=BA=D0=BE_=D0=A2=D0=B0?=\r\n\t=?utf-8?Q?=D1=82=D1=8C=D1=8F=D0=BD=D0=B0_=D0=9B=D0=B5=D0=BE=D0=BF=D0=BE?=\r\n\t=?utf-8?Q?=D0=BB=D1=8C=D0=B4=D0=BE=D0=B2=D0=BD=D0=B0?= <eac@example.com>\r\n\r\n"
+
+    assert_equal expected, mail.encoded
   end
 
   def test__empty_return_path
@@ -255,7 +262,7 @@ EOS
     a = @mail.from
     assert_equal nil, @mail.from
     assert_equal 'DEFAULT VALUE', @mail.from('DEFAULT VALUE')
-    
+
     @mail.from = "raasdnil@gmail.com, mikel@me.com"
     assert_equal 2, @mail['from'].addrs.size
     assert_equal 'raasdnil@gmail.com', @mail['from'].addrs[0].spec
@@ -303,12 +310,12 @@ EOS
     assert_equal nil, @mail.reply_to
     assert_equal 'DEFAULT VALUE', @mail.reply_to('DEFAULT VALUE')
   end
-  
+
   def test_reply_to_with_blank_reply_to
     @mail = TMail::Mail.new
     from_addr = TMail::Address.parse("Mikel Lindsaar <mikel@lindsaar.net>")
     @mail.from = from_addr
-    
+
     # No reply_to set, should return from address
     assert_equal([from_addr], @mail.reply_addresses)
 
@@ -463,7 +470,7 @@ EOF
     a = @mail.references
     assert_equal a.size, 1
     assert_equal i, a[0]
-    
+
     @mail.references = [i]
     a = @mail.references
     assert_equal a.size, 1
@@ -495,7 +502,7 @@ EOF
       @mail.content_type = 'text'
     }
   end
-  
+
   def test_email_with_part_without_content_type
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email_with_mimepart_without_content_type")
     mail = TMail::Mail.parse(fixture)
@@ -641,7 +648,7 @@ EOF
     assert_equal 1902, mail.attachments.first.length
     assert_equal "application/pkcs7-signature", mail.attachments.last.content_type
   end
-  
+
   def test_decode_attachment_without_charset
     mail = TMail::Mail.load("#{File.dirname(__FILE__)}/fixtures/raw_email3")
     attachment = mail.attachments.last
@@ -719,7 +726,7 @@ EOF
     assert_equal(true, forward.multipart?)
     assert_equal(TMail::Mail, forward.class)
   end
-  
+
   def test_body
     m = TMail::Mail.new
     expected = 'something_with_underscores'
