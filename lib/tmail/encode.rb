@@ -113,7 +113,6 @@ module TMail
 
     encoded = '=\?(?:iso-2022-jp|euc-jp|shift_jis)\?[QB]\?[a-z0-9+/=]+\?='
     ENCODED_WORDS = /#{encoded}(?:\s+#{encoded})*/i
-    SPACER       = "\t"
 
     OUTPUT_ENCODING = {
       'EUC'  => 'e',
@@ -163,10 +162,6 @@ module TMail
     end
 
     def meta( str )
-      @f << str
-    end
-
-    def puts_meta( str )
       @f << str
     end
 
@@ -304,10 +299,6 @@ module TMail
 
     def meta( str )
       add_text str
-    end
-
-    def puts_meta( str )
-      add_text str + @eol + SPACER
     end
 
     def text( str )
