@@ -338,26 +338,26 @@ end
 class ReceivedHeaderTester < Test::Unit::TestCase
   HEADER1 = <<EOS
 from helium.ruby-lang.org (helium.ruby-lang.org [210.251.121.214])
-	by doraemon.edit.ne.jp (8.12.1/8.12.0) via TCP with ESMTP
+  by doraemon.edit.ne.jp (8.12.1/8.12.0) via TCP with ESMTP
         id fB41nwEj007438 for <aamine@mx.edit.ne.jp>;
         Tue, 4 Dec 2001 10:49:58 +0900 (JST)
 EOS
   HEADER2 = <<EOS
 from helium.ruby-lang.org (localhost [127.0.0.1])
-	by helium.ruby-lang.org (Postfix) with ESMTP
-	id 8F8951AF3F; Tue,  4 Dec 2001 10:49:32 +0900 (JST)
+  by helium.ruby-lang.org (Postfix) with ESMTP
+  id 8F8951AF3F; Tue,  4 Dec 2001 10:49:32 +0900 (JST)
 EOS
   HEADER3 = <<EOS
 from smtp1.dti.ne.jp (smtp1.dti.ne.jp [202.216.228.36])
-	by helium.ruby-lang.org (Postfix) with ESMTP id CE3A1C3
-	for <ruby-list@ruby-lang.org>; Tue,  4 Dec 2001 10:49:31 +0900 (JST)
+  by helium.ruby-lang.org (Postfix) with ESMTP id CE3A1C3
+  for <ruby-list@ruby-lang.org>; Tue,  4 Dec 2001 10:49:31 +0900 (JST)
 EOS
 
 =begin  dangerous headers
 # 2-word WITH (this header is also wrong in semantic)
 # I cannot support this.
 Received: by mebius with Microsoft Mail
-	id <01BE2B9D.9051EAA0@mebius>; Sat, 19 Dec 1998 22:18:54 -0800
+  id <01BE2B9D.9051EAA0@mebius>; Sat, 19 Dec 1998 22:18:54 -0800
 =end
 
   def test_s_new
@@ -954,6 +954,22 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email11")
     mail = TMail::Mail.parse(fixture)
     assert_not_nil mail.from
+  end
+
+  def test_mail_warning_flag
+    assert !TMail::Mail.warn_on_parse_error
+    TMail::Mail.with_parse_warnings { assert TMail::Mail.warn_on_parse_error }
+    assert !TMail::Mail.warn_on_parse_error
+  end
+
+  def test_mail_processing_without_and_with_warnings
+    fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email_invalid_mime_header")
+    mail = TMail::Mail.parse(fixture)
+    assert_raise(TMail::SyntaxError) { mail.body }
+    mail = TMail::Mail.parse(fixture)
+    warnings = TMail::Mail.with_parse_warnings { mail.body }
+    assert_equal ["wrong mail header: '\"\\\"\\n\"'"], warnings
+    assert_equal [], TMail::Mail.with_parse_warnings { }
   end
 
   def test_new_from_port_should_produce_a_header_object_of_the_correct_class
