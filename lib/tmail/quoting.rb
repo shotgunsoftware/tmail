@@ -3,6 +3,8 @@
 = Quoting methods
 
 =end
+require 'yaml'
+
 module TMail
   class Mail
     def subject(to_charset = 'utf-8')
@@ -57,13 +59,13 @@ module TMail
   end
 
   class Attachment
-    
+
     include TextUtils
-    
+
     def quoted?(string)
       !!((string =~ /.+'\w\w'.+/) || (string =~ /=\?.+\?.\?.+\?=/))
     end
-    
+
     # Only unquote if quoted
     def original_filename(to_charset = 'utf-8')
       if quoted?(quoted_filename)
@@ -155,10 +157,10 @@ module TMail
           text
         end
       end
-      
+
       alias_method :convert_to_without_fallback_on_iso_8859_1, :convert_to
       alias_method :convert_to, :convert_to_with_fallback_on_iso_8859_1
-      
+
     end
   end
 end
