@@ -85,7 +85,7 @@ class TestAddress < Test::Unit::TestCase
     a.inspect
   end
 
-  
+
   def validate_case__address( str, ok )
     a = TMail::Address.parse(str)
     assert_equal ok[:display_name], a.phrase, str.inspect + " (phrase)\n"
@@ -150,6 +150,33 @@ class TestAddress < Test::Unit::TestCase
         :local        => 'aamine',
         :domain       => '0246.loveruby.net',
         :format       => 'Minero Aoki <aamine@0246.loveruby.net>'
+
+    validate_case__address "Mary Smith <.m.t-wow@i.example.com>",
+        :name         => 'Mary Smith',
+        :display_name => 'Mary Smith',
+        :address      => '.m.t-wow@i.example.com',
+        :comments     => nil,
+        :domain       => 'i.example.com',
+        :local        => '.m.t-wow',
+        :format       => 'Mary Smith <.m.t-wow@i.example.com>'
+
+    validate_case__address "Mary Smith <wow|@example.com>",
+        :name         => 'Mary Smith',
+        :display_name => 'Mary Smith',
+        :address      => 'wow|@example.com',
+        :comments     => nil,
+        :domain       => 'example.com',
+        :local        => 'wow|',
+        :format       => 'Mary Smith <wow|@example.com>'
+
+    validate_case__address "Mary Smith <wo-w.dncy.i-fi.x-4...@example.com>",
+        :name         => 'Mary Smith',
+        :display_name => 'Mary Smith',
+        :address      => 'wo-w.dncy.i-fi.x-4...@example.com',
+        :comments     => nil,
+        :domain       => 'example.com',
+        :local        => 'wo-w.dncy.i-fi.x-4...',
+        :format       => 'Mary Smith <wo-w.dncy.i-fi.x-4...@example.com>'
 
   end
 
@@ -267,7 +294,7 @@ class TestAddress < Test::Unit::TestCase
         :local        => 'aamine',
         :domain       => 'loveruby.net',
         :format       => 'Minero Aoki <aamine@loveruby.net>'
-    
+
     # raw iso-2022-jp string in quoted-word (it includes backslash)
     validate_case__address\
     %Q["\e$BF|K\\8l\e(B" <aamine@loveruby.net>],
@@ -293,7 +320,7 @@ class TestAddress < Test::Unit::TestCase
   # The following test cases are quoted from RubyMail 0.2
   # (written by Matt Armstrong), with some modifications.
   # The copyright notice of the original file is:
-  # 
+  #
   #   Copyright (c) 2001 Matt Armstrong.  All rights reserved.
   #
   #   Permission is granted for use, copying, modification,
@@ -374,7 +401,7 @@ class TestAddress < Test::Unit::TestCase
         :domain       => 'example.com',
         :local        => 'john.q.public',
         :format       => '"Joe Q.Public" <john.q.public@example.com>'
-	
+
     validate_case__address\
     'Mary Smith <@machine.tld:mary@example.net>',
         :name         => 'Mary Smith',
@@ -394,7 +421,7 @@ class TestAddress < Test::Unit::TestCase
         :comments     => nil,
         :domain       => 'test.example',
         :local        => 'jdoe',
-        :format       => 'jdoe@test.example' 
+        :format       => 'jdoe@test.example'
 
     validate_case__address\
     'John Doe <jdoe@machine(comment).  example>',
@@ -416,6 +443,7 @@ class TestAddress < Test::Unit::TestCase
         :domain       => 'example.net',
         :local        => 'mary',
         :format       => 'Mary Smith <mary@example.net>'
+
   end
 
 
@@ -853,7 +881,7 @@ class TestAddress < Test::Unit::TestCase
         :local        => 'Investor Alert',
         :format       => '"Investor Alert"@example.com'
 =end
-    
+
     validate_case__address\
     '"" <bob@example.com>',
         :name         => nil,
@@ -967,7 +995,7 @@ class TestAddress < Test::Unit::TestCase
           :local        => ch,
           :format       => ch + ' <' + ch + '@test>'
     end
-    
+
     validate_case__address\
     atext.join('') + ' <' + atext.join('') + '@test>',
         :name         => atext.join(''),
@@ -997,7 +1025,7 @@ class TestAddress < Test::Unit::TestCase
           :local        => %Q("#{ch}"),
           :format       => %Q("#{ch}" <"#{ch}"@test>)
     end
-    
+
     ['"', "\\"].each do |ch|
       validate_case__address\
       %Q("\\#{ch}" <"\\#{ch}"@test>),
@@ -1134,7 +1162,7 @@ class TestAddress < Test::Unit::TestCase
   end
 
   def test_at_char_in_address()
-  
+
     validate_case__address\
     %Q(mikel@lindsaar.net <lindsaar@you.net>),
         :name         => "mikel@lindsaar.net",
@@ -1144,7 +1172,7 @@ class TestAddress < Test::Unit::TestCase
         :domain       => 'you.net',
         :local        => %Q(lindsaar),
         :format       => %Q("mikel@lindsaar.net" <lindsaar@you.net>)
-  
+
     validate_case__address\
     %Q(mikel@lindsaar.net <mikel@lindsaar.net>),
         :name         => %Q(mikel@lindsaar.net),
@@ -1205,12 +1233,12 @@ class TestAddress < Test::Unit::TestCase
          :local        => %Q(mikel),
          :format       => %Q(mikel <mikel@lindsaar.net>)
   end
-  
+
   def test_trailing_dot_in_name
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email_trailing_dot")
     str = 'Sandy M. <noreply@rubyforge.org>'
     mail = TMail::Mail.parse(fixture)
     assert_equal '"Sandy M." <noreply@rubyforge.org>', mail['from'].to_s
   end
-  
+
 end
