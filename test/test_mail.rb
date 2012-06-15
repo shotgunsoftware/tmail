@@ -737,6 +737,13 @@ EOF
     assert_equal expected, m.body
   end
 
+  def test_multipart_boundaries_are_memoized
+    mail = TMail::Mail.new
+    mail.set_content_type 'multipart/mixed'
+    mail.parts << TMail::Mail.new
+    assert_equal mail.to_s, mail.to_s
+  end
+
   def test_nested_attachments_are_recognized_correctly
     fixture = File.read("#{File.dirname(__FILE__)}/fixtures/raw_email_with_nested_attachment")
     mail = TMail::Mail.parse(fixture)

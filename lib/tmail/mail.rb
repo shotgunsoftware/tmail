@@ -208,22 +208,22 @@ module TMail
         yield
 
       else
-        bound = ::TMail.new_boundary
+        @bound ||= ::TMail.new_boundary
         if @header.key? 'content-type'
-          @header['content-type'].params['boundary'] = bound
+          @header['content-type'].params['boundary'] = @bound
         else
-          store 'Content-Type', %<multipart/mixed; boundary="#{bound}">
+          store 'Content-Type', %<multipart/mixed; boundary="#{@bound}">
         end
 
         yield
 
         parts().each do |tm|
           strategy.puts
-          strategy.puts '--' + bound
+          strategy.puts '--' + @bound
           tm.accept strategy
         end
         strategy.puts
-        strategy.puts '--' + bound + '--'
+        strategy.puts '--' + @bound + '--'
         strategy.write epilogue()
       end
     end
