@@ -311,6 +311,11 @@ rule
                   val[0][ val[2].downcase ] = val[4]
                   val[0]
                 }
+            | params ';' TOKEN
+                {
+                  val[0][ val[2].downcase ] = nil
+                  val[0]
+                }
 
   cencode   : TOKEN
                 {

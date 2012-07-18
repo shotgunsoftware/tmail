@@ -617,6 +617,13 @@ EOF
     }
   end
 
+  def test_bad_disposition
+    @mail['content-disposition'] = 'attachment; filename="Voice Message.wav"; cv-play'
+
+    assert_equal 'attachment',        @mail.disposition
+    assert_equal 'Voice Message.wav', @mail.disposition_param('filename')
+  end
+
   def test_set_disposition
     @mail.set_disposition 'attachment', 'filename'=>'sample.rb'
     assert_equal 'attachment', @mail.disposition
