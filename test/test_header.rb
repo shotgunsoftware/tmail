@@ -967,9 +967,8 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     mail = TMail::Mail.parse(fixture)
     assert_raise(TMail::SyntaxError) { mail.body }
     mail = TMail::Mail.parse(fixture)
-    warnings = TMail::Mail.with_parse_warnings { mail.body }
-    assert_equal ["wrong mail header: '\"\\\"\\n\"'"], warnings
-    assert_equal [], TMail::Mail.with_parse_warnings { }
+    TMail::Mail.with_parse_warnings { mail.body }
+    assert_equal ["wrong mail header: '\"\\\"\\n\"'"], mail.parts.first.parse_warnings
   end
 
   def test_new_from_port_should_produce_a_header_object_of_the_correct_class

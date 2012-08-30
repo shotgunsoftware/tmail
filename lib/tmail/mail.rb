@@ -82,22 +82,19 @@ module TMail
   #
   class Mail
 
+    attr_accessor :parse_warnings
+
     class << self
       attr_accessor :warn_on_parse_error
-      attr_accessor :parse_warnings
 
       # Allows email parsing to only give warnings rather than SyntaxError exceptions.
       # This method returns an array of warning messages.
       def with_parse_warnings(&block)
-        self.parse_warnings      = []
         self.warn_on_parse_error = true
 
         yield
-        self.parse_warnings
-
       ensure
         self.warn_on_parse_error = false
-        self.parse_warnings      = nil
       end
 
       # Opens an email that has been saved out as a file by itself.
@@ -429,8 +426,8 @@ module TMail
         else
           message = "wrong mail header: '#{line.inspect}'"
           if self.class.warn_on_parse_error
-            self.class.parse_warnings << message
-            self.class.parse_warnings.pop while self.class.parse_warnings.size > 100
+            @parse_warnings ||= []
+            @parse_warnings << message
           else
             raise SyntaxError, message
           end
