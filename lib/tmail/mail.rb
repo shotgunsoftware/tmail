@@ -408,7 +408,7 @@ module TMail
           raise SyntaxError, 'mail is began by space' unless field
           field << ' ' << line.strip
 
-        when /\A([^\: \t]+):\s*/   # new header line
+        when /\A([^\: \t]+) ?:\s*/   # new header line
           add_hf name, field if field
           name = $1
           field = $' #.strip

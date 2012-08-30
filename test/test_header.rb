@@ -944,6 +944,12 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     assert_raise(TMail::SyntaxError) { TMail::Mail.parse(fixture) }
   end
 
+  def test_malformed_header_key
+    fixture = "From: test@example.com\nX-Malformed : true\n\nhello"
+    mail    = TMail::Mail.parse(fixture)
+    assert_equal 'true', mail.header['x-malformed'].to_s
+  end
+
   def test_decode_message_with_unknown_charset
     fixture = File.read(File.dirname(__FILE__) + "/fixtures/raw_email10")
     mail = TMail::Mail.parse(fixture)
