@@ -33,4 +33,14 @@ include TMail::TextUtils
     assert_equal(nil, mail.unquote(nil))
   end
 
+  # before adding strip:
+  #
+  # before quote_boundary: 'multipart/related; boundary="----_=_NextPart_001_01CE0390.F97F1AD6" ; type="multipart/alternative"'
+  #  after quote_boundary: 'multipart/related; boundary=""----_=_NextPart_001_01CE0390.F97F1AD6" "; type="multipart/alternative"'
+  #
+  def test_quote_boundary
+    @body = 'boundary="----_=_NextPart_001_01CE0390.F97F1AD6" ; type="multipart/alternative"'
+    TMail::TextUtils.quote_boundary
+    assert_equal('boundary="----_=_NextPart_001_01CE0390.F97F1AD6" ; type="multipart/alternative"',@body)
+  end
 end

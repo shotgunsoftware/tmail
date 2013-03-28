@@ -318,7 +318,7 @@ module TMail
         remainder = $2
         if remainder =~ /;/
           remainder =~ /^(.*?)(;.*)$/m
-          boundary_text = $1
+          boundary_text = $1.strip
           post = $2.chomp
         else
           boundary_text = remainder.chomp
