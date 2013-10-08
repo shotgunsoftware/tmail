@@ -112,7 +112,7 @@ module TMail
     aspecial     = %Q|()<>[]:;.\\,"|
     tspecial     = %Q|()<>[];:\\,"/?=|
     lwsp         = %Q| \t\r\n|
-    control      = %Q|\x00-\x1f\x7f-\xff|
+    control      = %Q|\x00-\x1f\x7f-\xff|.force_encoding('ASCII-8BIT')
 
     CONTROL_CHAR  = /[#{control}]/n
     ATOM_UNSAFE   = /[#{Regexp.quote aspecial}#{control}#{lwsp}]/n
