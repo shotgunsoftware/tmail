@@ -36,8 +36,8 @@ module CharDet
   class UniversalDetector
     attr_accessor :result
     def initialize
-      @_highBitDetector = /[\x80-\xFF]/
-      @_escDetector = /(\033|\~\{)/
+      @_highBitDetector = Regexp.new('[\x80-\xFF]', nil, 'n')
+      @_escDetector = Regexp.new('(\033|\~\{)', nil, 'n')
       @_mEscCharSetProber = nil
       @_mCharSetProbers = []
       reset()
