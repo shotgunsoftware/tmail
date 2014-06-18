@@ -110,7 +110,7 @@ module TMail
           end
         end
 
-        if from.blank? and !text.is_binary_data?
+        if from.blank? and !string_is_binary_data?(text)
           from = CharDet.detect(text[0..2000])['encoding']
 
           # Chardet ususally detects iso-8859-2 (aka windows-1250), but the text is
@@ -127,6 +127,14 @@ module TMail
             from = 'iso-8859-1'
             retry
           end
+        end
+      end
+
+      def string_is_binary_data?(string)
+        if defined?(Encoding::ASCII_8BIT)
+          string.encoding == Encoding::ASCII_8BIT # 1.9+
+        else
+          (string.count("^ -~", "^\r\n").fdiv(string.size) > 0.3 || string.index("\x00")) unless string.empty? # 1.8
         end
       end
 
