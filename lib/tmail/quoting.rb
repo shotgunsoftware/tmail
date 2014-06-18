@@ -105,7 +105,7 @@ module TMail
         return text if to == 'utf-8' and text.isutf8
 
         if from.blank? and !text.is_binary_data?
-          from = CharDet.detect(text)['encoding']
+          from = CharDet.detect(text[0..2000])['encoding']
 
           # Chardet ususally detects iso-8859-2 (aka windows-1250), but the text is
           # iso-8859-1 (aka windows-1252 and Latin1). http://en.wikipedia.org/wiki/ISO/IEC_8859-2
