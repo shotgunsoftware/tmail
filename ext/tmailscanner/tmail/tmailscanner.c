@@ -25,16 +25,15 @@
 #define RSTRING_LEN(obj) RSTRING(obj)->len
 #endif
 
-#ifdef HAVE_RUBY_VM_H
+#ifdef HAVE_RUBY_RE_H
 #include "ruby/re.h"
-#include "ruby/encoding.h"
 #else
 #include "re.h"
 #endif
 
-#ifdef HAVE_RUBY_VM_H
-const unsigned char *re_mbctab;
-#define ismbchar(c) re_mbctab[(unsigned char)(c)]
+#ifdef HAVE_RUBY_ENCODING_H
+#include "ruby/encoding.h"
+#define ismbchar(c) (!rb_enc_isascii((unsigned char)(c),NULL))
 #endif
 
 #define TMAIL_VERSION "1.2.3"
@@ -49,6 +48,9 @@ struct scanner
     char *pend;
     unsigned int flags;
     VALUE comments;
+#ifdef HAVE_RUBY_ENCODING_H
+    rb_encoding *enc;
+#endif
 };
 
 #define MODE_MIME     (1 << 0)
@@ -60,39 +62,75 @@ struct scanner
 #define RECV_MODE_P(s)     ((s)->flags & MODE_RECV)
 #define ISO2022_MODE_P(s)  ((s)->flags & MODE_ISO2022)
 
+#ifndef HAVE_RB_DATA_TYPE_T_FUNCTION
 #define GET_SCANNER(val, s) Data_Get_Struct(val, struct scanner, s)
+#define MAKE_SCANNER(klass, s) Data_Make_Struct(klass, struct scanner, 0, -1, sc)
+#else
+#define GET_SCANNER(val, s) TypedData_Get_Struct(val, struct scanner, &mails_type, s)
+#define MAKE_SCANNER(klass, s) TypedData_Make_Struct(klass, struct scanner, &mails_type, s)
 
 
 static void
-mails_free(sc)
-    struct scanner *sc;
+mails_mark(ptr)
+    void *ptr;
 {
-    free(sc);
+    struct scanner *sc = ptr;
+    rb_gc_mark(sc->comments);
 }
+
+static size_t
+mails_memsize(ptr)
+    const void *ptr;
+{
+    return ptr ? sizeof(struct scanner) : 0;
+}
+
+static const rb_data_type_t mails_type = {
+    "TMailScanner",
+    {mails_mark, RUBY_TYPED_DEFAULT_FREE, mails_memsize,},
+};
+#endif
 
 #ifndef StringValue
 #  define StringValue(s) Check_Type(str, T_STRING);
 #endif
 
+static int
+is_japanese(str)
+    VALUE str;
+{
+#ifdef HAVE_RUBY_ENCODING_H
+    rb_encoding *enc = rb_enc_get(str);
+    const char *name = rb_enc_name(enc);
+    return strcmp(name, "ISO-2022-JP") == 0;
+#else
+    const char *tmp = rb_get_kcode();
+    return strcmp(tmp, "EUC") == 0 || strcmp(tmp, "SJIS") == 0;
+#endif
+}
+
 /*
- * Document-method: mails_s_new
+ * Document-method: mails_init
  *
  * Creates a new mail
  *
  */
 static VALUE
-mails_s_new(klass, str, ident, cmt)
-    VALUE klass, str, ident, cmt;
+mails_init(obj, str, ident, cmt)
+    VALUE obj, str, ident, cmt;
 {
     struct scanner *sc;
     const char *tmp;
 
-    sc = ALLOC_N(struct scanner, 1);
+    GET_SCANNER(obj, sc);
 
     StringValue(str);
     sc->pbeg = RSTRING_PTR(str);
     sc->p    = sc->pbeg;
     sc->pend = sc->p + RSTRING_LEN(str);
+#ifdef HAVE_RUBY_ENCODING_H
+    sc->enc = rb_enc_get(str);
+#endif
 
     sc->flags = 0;
     Check_Type(ident, T_SYMBOL);
@@ -102,8 +140,7 @@ mails_s_new(klass, str, ident, cmt)
     else if (strcmp(tmp, "CENCODING")    == 0) sc->flags |= MODE_MIME;
     else if (strcmp(tmp, "CDISPOSITION") == 0) sc->flags |= MODE_MIME;
 
-    tmp = rb_get_kcode();
-    if (strcmp(tmp, "EUC") == 0 || strcmp(tmp, "SJIS") == 0) {
+    if (is_japanese(str)) {
         sc->flags |= MODE_ISO2022;
     }
 
@@ -113,8 +150,25 @@ mails_s_new(klass, str, ident, cmt)
         sc->comments = cmt;
     }
 
-    return Data_Wrap_Struct(TMailScanner, 0, mails_free, sc);
+    return obj;
 }
+
+static VALUE
+mails_s_alloc(klass)
+    VALUE klass;
+{
+    struct scanner *sc;
+    return MAKE_SCANNER(klass, sc);
+}
+
+#ifndef HAVE_RB_DEFINE_ALLOC_FUNC
+static VALUE
+mails_s_new(klass, str, ident, cmt)
+    VALUE klass, str, ident, cmt;
+{
+    return mails_init(mails_s_alloc(klass), str, ident, cmt);
+}
+#endif
 
 /*
  * Document-method: mails_debug_get
@@ -198,29 +252,20 @@ skip_iso2022jp_string(sc)
     }
 }
 
-#ifdef HAVE_RUBY_VM_H
-static void
-skip_japanese_string(sc)
-  struct scanner *sc;
-{
-  while(sc->p < sc->pend) {
-	if (! ismbchar(*sc->p)) return;
-	rb_encoding *enc = rb_enc_get(sc);
-	sc->p += mbclen(sc->p, sc->pend, enc);
-  }
-}  
-#else
 static void
 skip_japanese_string(sc)
     struct scanner *sc;
 {
     while (sc->p < sc->pend) {
+#ifdef HAVE_RUBY_ENCODING_H
+        if (! ismbchar(*sc->p)) return;
+	sc->p += mbclen(sc->p, sc->pend, sc->enc);
+#else
         if (! ismbchar(*sc->p)) return;
         sc->p += mbclen(*sc->p);
+#endif
     }
 }
-#endif
-
 
 #define scan_atom(sc) scan_word(sc, ATOM_SYMBOLS)
 #define scan_token(sc) scan_word(sc, TOKEN_SYMBOLS)
@@ -228,9 +273,9 @@ skip_japanese_string(sc)
 static VALUE
 scan_word(sc, syms)
     struct scanner *sc;
-    char *syms;
+    const char *syms;
 {
-    char *beg = sc->p;
+    const char *beg = sc->p;
 
     while (sc->p < sc->pend) {
         if (ISO2022_MODE_P(sc) && *sc->p == ESC) {
@@ -390,7 +435,7 @@ skip_lwsp(sc)
 
 static int
 nccmp(a, b)
-    char *a, *b;
+    const char *a, *b;
 {
     while (*a && *b) {
         if ((*a != *b) && (TO_LOWER(*a) != TO_LOWER(*b)))
@@ -554,9 +599,12 @@ mails_scan(self)
 ------------------------------------------------------------------
 */
 
+#ifdef rb_intern_const
+#define cstr2symbol(str) ID2SYM(rb_intern_const(str))
+#else
 static VALUE
 cstr2symbol(str)
-    char *str;
+    const char *str;
 {
     ID tmp;
 
@@ -567,6 +615,7 @@ cstr2symbol(str)
     return INT2FIX(tmp);
 #endif
 }
+#endif
 
 void
 Init_tmailscanner()
@@ -586,7 +635,12 @@ Init_tmailscanner()
     rb_obj_freeze(tmp);
     rb_define_const(TMailScanner, "Version", tmp);
 
+#ifdef HAVE_RB_DEFINE_ALLOC_FUNC
+    rb_define_alloc_func(TMailScanner, mails_s_alloc);
+    rb_define_method(TMailScanner, "initialize", mails_init, 3);
+#else
     rb_define_singleton_method(TMailScanner, "new", mails_s_new, 3);
+#endif
     rb_define_method(TMailScanner, "scan", mails_scan, 0);
     rb_define_method(TMailScanner, "debug", mails_debug_get, 0);
     rb_define_method(TMailScanner, "debug=", mails_debug_set, 1);
