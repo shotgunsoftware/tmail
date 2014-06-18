@@ -53,7 +53,7 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 360)
     # around the display name when the display name contains a '@'
     # like 'mikel@me.com <mikel@me.com>'
     # Just quotes it to: '"mikel@me.com" <mikel@me.com>'
-    when str =~ /\A([^"].+@.+[^"])\s(<.*?>)\Z/
+    when str =~ /\A([^"][^<]+@[^>]+[^"])\s(<.*?>)\Z/
       return "\"#{$1}\" #{$2}"
     # This handles cases where 'Mikel A. <mikel@me.com>' which is a trailing
     # full stop before the address section.  Just quotes it to
