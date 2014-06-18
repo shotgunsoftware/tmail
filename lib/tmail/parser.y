@@ -26,7 +26,7 @@ rule
             | CDISPOSITION  cdisp      { val[1] }
             | ADDRESS       addr_TOP   { val[1] }
             | MAILBOX       mbox       { val[1] }
-  
+
   datetime  : day DIGIT ATOM DIGIT hour zone
             # 0   1     2    3     4    5
             #     date month year
@@ -34,10 +34,10 @@ rule
                   t = Time.gm(val[3].to_i, val[2], val[1].to_i, 0, 0, 0)
                   (t + val[4] - val[5]).localtime
                 }
-  
+
   day       :  /* none */
             | ATOM ','
-  
+
   hour      : DIGIT ':' DIGIT
                 {
                   (val[0].to_i * 60 * 60) +
@@ -49,29 +49,29 @@ rule
                   (val[2].to_i * 60) +
                   (val[4].to_i)
                 }
-  
+
   zone      : ATOM
                 {
                   timezone_string_to_unixtime(val[0])
                 }
-  
+
   received  : from by via with id for received_datetime
                 {
                   val
                 }
-  
+
   from      : /* none */
             | FROM received_domain
                 {
                   val[1]
                 }
-  
+
   by        :  /* none */
             | BY received_domain
                 {
                   val[1]
                 }
-  
+
   received_domain
             : domain
                 {
@@ -85,13 +85,13 @@ rule
                 {
                   join_domain(val[0])
                 }
-  
+
   via       :  /* none */
             | VIA ATOM
                 {
                   val[1]
                 }
-  
+
   with      : /* none */
                 {
                   []
@@ -101,7 +101,7 @@ rule
                   val[0].push val[2]
                   val[0]
                 }
-  
+
   id        :  /* none */
             | ID msgid
                 {
@@ -111,7 +111,7 @@ rule
                 {
                   val[1]
                 }
-  
+
   for       :  /* none */
             | FOR received_addrspec
                 {
@@ -127,14 +127,14 @@ rule
                 {
                   val[0].spec
                 }
-  
+
   received_datetime
             :  /* none */
             | ';' datetime
                 {
                   val[1]
                 }
-  
+
   addrs_TOP : addrs
             | group_bare
             | addrs commas group_bare
@@ -184,7 +184,7 @@ rule
                   AddressGroup.new(val[0], val[2])
                 }
             | addr_phrase ':' { AddressGroup.new(val[0], []) }
-  
+
   addr_phrase
             : local_head             { val[0].join('.') }
             | addr_phrase local_head { val[0] << ' ' << val[1].join('.') }
@@ -198,20 +198,35 @@ rule
                 {
                   val[1]
                 }
-  
+
   routes    : at_domains ':'
-  
+
   at_domains: '@' domain                { [ val[1].join('.') ] }
             | at_domains ',' '@' domain { val[0].push val[3].join('.'); val[0] }
-  
+
   spec      : local '@' domain { Address.new( val[0], val[2] ) }
             | local            { Address.new( val[0], nil ) }
-  
+
   local: local_head
        | local_head '.' { val[0].push ''; val[0] }
 
-  local_head: word
-                { val }
+  local_head: word { val }
+            | dots local_head
+                {
+                  dot_count = val[0] + 1
+                  dot_count.times do
+                    val[1].unshift ''
+                  end
+                  val[1]
+                }
+            | local_head dots
+                {
+                  dot_count = val[1] + 1
+                  dot_count.times do
+                    val[0].push ''
+                  end
+                  val[0]
+                }
             | local_head dots word
                 {
                   val[1].times do
@@ -220,7 +235,7 @@ rule
                   val[0].push val[2]
                   val[0]
                 }
-  
+
   domain    : domword
                 { val }
             | domain dots domword
@@ -254,10 +269,10 @@ rule
 
   keys      : phrase          { val }
             | keys ',' phrase { val[0].push val[2]; val[0] }
-  
+
   phrase    : word
             | phrase word { val[0] << ' ' << val[1] }
-  
+
   enc       : word
                 {
                   val.push nil
@@ -281,7 +296,7 @@ rule
                 {
                   [ val[0].downcase, nil, decode_params(val[1]) ]
                 }
-  
+
   params    : /* none */
                 {
                   {}
@@ -296,6 +311,11 @@ rule
                   val[0][ val[2].downcase ] = val[4]
                   val[0]
                 }
+            | params ';' TOKEN
+                {
+                  val[0][ val[2].downcase ] = nil
+                  val[0]
+                }
 
   cencode   : TOKEN
                 {
@@ -306,11 +326,11 @@ rule
                 {
                   [ val[0].downcase, decode_params(val[1]) ]
                 }
-  
+
   opt_semicolon
             :
             | ';'
-              
+
   atom      : ATOM
             | FROM
             | BY
@@ -318,7 +338,7 @@ rule
             | WITH
             | ID
             | FOR
-  
+
 end
 
 
@@ -409,7 +429,7 @@ require 'tmail/utils'
     yield @first
     @scanner.scan(&block)
   end
-  
+
   def on_error( t, val, vstack )
     raise TMail::SyntaxError, "parse error on token #{racc_token2str t}"
   end

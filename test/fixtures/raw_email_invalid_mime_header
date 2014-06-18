@@ -1,0 +1,27 @@
+Received: from xxx.xxx.xxx ([xxx.xxx.xxx.xxx] verified)
+  by xxx.com (CommuniGate Pro SMTP 4.2.8)
+  with SMTP id 2532598 for xxx@xxx.com; Wed, 23 Feb 2005 17:51:49 -0500
+MIME-Version: 1.0
+Date: Wed, 23 Feb 2005 18:20:17 -0400
+From: "xxx xxx" <xxx@xxx.xxx>
+Message-ID: <4D6AA7EB.6490534@xxx.xxx>
+To: xxx@xxx.com
+Subject: Dear sirs, I'm sending you a bad header.
+Content-Type: Multipart/Mixed;boundary="Boundary-00=_T7P340MWKGMMYJ0CCJD0"
+
+--Boundary-00=_T7P340MWKGMMYJ0CCJD0
+Content-Type: Multipart/Alternative;boundary="Boundary-00=_Z7P340MWKGMMYJ0CCJD0"
+"
+
+--Boundary-00=_Z7P340MWKGMMYJ0CCJD0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Who let the dogs out?
+
+--Boundary-00=_Z7P340MWKGMMYJ0CCJD0
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<b>Who let the dogs out?</b>
+
