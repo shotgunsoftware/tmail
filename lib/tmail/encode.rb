@@ -334,9 +334,58 @@ module TMail
       str.gsub(TOKEN_UNSAFE) {|s| '%%%02x' % s[0] }
     end
 
+    # SHOTGUN CUSTOM  SG-15937
+    # A clumsy fix for the infinite loop error documented below -- see fold()
+    # since the code involved is difficult to understand and test cases are extremely lacking,
+    # a real fix seemed too risky.
+    #
+    # The error can be prevented by ensuring there are no segments of the string
+    # longer than 998 chars that have no spaces in them.
+    #
+    # Hack: Ensure every 400 character segment has a space in it.  Try to put it in a nice place,
+    # but if no obvious place is found, just put it in anyway.
+    # This implementation doesn't minimize the addition of space, but rather is
+    # hopefully simple enough that it minimizes possible failures.
+    #
+    # This is not in 'private' so it can be monkey-patchable in Shotgun unit tests.
+    def tmail_fold_bug_workaround(str)
+      if str.size < 800
+        return str
+      end
+
+      # Array of arrays
+      segments = str.chars.each_slice(400).map(&:join)
+
+      # Check segments for spaces.
+      segments.each do |seg|
+        # No space in segment? Add one somewhere.
+        if !seg.match?(/\p{Zs}/)
+          # If there's already a \n, add it there.
+          # otherwise, add " \n" at an arbitrary place - too bad but we will try to make it a nice place.
+          # Add it before a \n
+
+          if ( pos = seg.index("\n") )
+            # Add a space before \n
+            seg.insert(pos, " ")
+          elsif ( pos = seg.index( %r{[\\/\.,]} ) )
+            # Add a space after \ / . ,
+            seg.insert(pos+1, " ")
+          else
+            # No nice insertion point, so just put a space + lf on the end of the segment
+            seg.insert(seg.size, " \n")
+          end
+        end
+      end
+
+      segments.join('')
+    end
+
     private
 
     def scanadd( str, force = false )
+      # SHOTGUN CUSTOM SG-15937
+      str = tmail_fold_bug_workaround(str)
+
       types = ''
       strs = []
       if str.respond_to?(:encoding)
@@ -527,6 +576,17 @@ module TMail
 
     def fold
       # puts '---- fold ----'
+
+      # SHOTGUN CUSTOM -  This appears to be the code that causes
+      # the infinite loop on some email subject lines.
+      # It does not fold segments unless they come AFTER a segment ending in a colon,
+      # but if the previous segment was too long, then the folding logic will
+      # go into an infinite loop because it can't go back and fold the previous segment.
+      #
+      # It's confusing code and the unit tests are insufficient to confidently validate it.
+      # Of course, it has not actually been used by any Rails version for a very long time.
+      # For that reason, I couldn't fix it properly - would need to start with code that makes sense
+      # and unit tests that are comprehensive.  - SG-15937
       unless @f.string =~ /^.*?:$/
         @f << @eol
         @lwsp = SPACER
@@ -547,7 +607,12 @@ module TMail
       # Check the text to see if there is whitespace, or if not
       @wrapped_text = []
       until @text.blank?
+        before = @text.dup # SHOTGUN CUSTOM - SG-15937
         fold_the_string
+        # SHOTGUN CUSTOM - SG-15937
+        # If the call to 'fold_the_string' fails to do anything, this loop will spin forever and
+        # hang the EmailNotifier or Shotgun app server process.
+        raise Net::SMTPFatalError.new("TMail encode error") if ( ! @text.blank? && @text == before )
       end
       @text = @wrapped_text.join("#{@eol}#{SPACER}")
     end
