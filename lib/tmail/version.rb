@@ -33,7 +33,7 @@ module TMail
     MAJOR = 1
     MINOR = 2
     TINY  = 7
-    MICRO = 1
+    MICRO = 2
 
     STRING = [MAJOR, MINOR, TINY, MICRO].join('.')
   end
