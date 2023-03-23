@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # scanner_r.rb
 #
 #--
@@ -52,46 +54,43 @@ module TMail
     sjisstr = "(?:[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])+"
     utf8str = "(?:[\xc0-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf][\x80-\xbf])+"
 
-    quoted_with_iso2022  = /\A(?:[^\\\e"]+|#{iso2022str})+/
-    domlit_with_iso2022  = /\A(?:[^\\\e\]]+|#{iso2022str})+/
-    comment_with_iso2022 = /\A(?:[^\\\e()]+|#{iso2022str})+/
+    quoted_with_iso2022  = /\A(?:[^\\\e"]+|#{iso2022str})+/n
+    domlit_with_iso2022  = /\A(?:[^\\\e\]]+|#{iso2022str})+/n
+    comment_with_iso2022 = /\A(?:[^\\\e()]+|#{iso2022str})+/n
 
-    quoted_without_iso2022  = /\A[^\\"]+/
-    domlit_without_iso2022  = /\A[^\\\]]+/
-    comment_without_iso2022 = /\A[^\\()]+/
+    quoted_without_iso2022  = /\A[^\\"]+/n
+    domlit_without_iso2022  = /\A[^\\\]]+/n
+    comment_without_iso2022 = /\A[^\\()]+/n
 
     PATTERN_TABLE = {}
-    # Note: These patterns are causing breaking changes with the newer version of rack and we do not use them
-    # We will also stop using tmail as soon as wel move to rails 3.2 LTS so this should not have any impact.
-
     PATTERN_TABLE['EUC'] =
       [
-        /\A(?:[#{atomchars}]+|#{iso2022str}|#{eucstr})+/,
-        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{eucstr})+/,
+        /\A(?:[#{atomchars}]+|#{iso2022str}|#{eucstr})+/n,
+        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{eucstr})+/n,
         quoted_with_iso2022,
         domlit_with_iso2022,
         comment_with_iso2022
       ]
     PATTERN_TABLE['SJIS'] =
       [
-        /\A(?:[#{atomchars}]+|#{iso2022str}|#{sjisstr})+/,
-        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{sjisstr})+/,
+        /\A(?:[#{atomchars}]+|#{iso2022str}|#{sjisstr})+/n,
+        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{sjisstr})+/n,
         quoted_with_iso2022,
         domlit_with_iso2022,
         comment_with_iso2022
       ]
     PATTERN_TABLE['UTF8'] =
       [
-        /\A(?:[#{atomchars}]+|#{utf8str})+/,
-        /\A(?:[#{tokenchars}]+|#{utf8str})+/,
+        /\A(?:[#{atomchars}]+|#{utf8str})+/n,
+        /\A(?:[#{tokenchars}]+|#{utf8str})+/n,
         quoted_without_iso2022,
         domlit_without_iso2022,
         comment_without_iso2022
       ]
     PATTERN_TABLE['NONE'] =
       [
-        /\A[#{atomchars}]+/,
-        /\A[#{tokenchars}]+/,
+        /\A[#{atomchars}]+/n,
+        /\A[#{tokenchars}]+/n,
         quoted_without_iso2022,
         domlit_without_iso2022,
         comment_without_iso2022
