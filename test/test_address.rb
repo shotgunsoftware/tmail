@@ -216,55 +216,55 @@ class TestAddress < Test::Unit::TestCase
         :domain       => 'loveruby.net',
         :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
 
-    # TMail.KCODE = 'EUC'
-    # expected = "\306\374\313\334\270\354"
-    # expected.force_encoding('EUC-JP') if expected.respond_to? :force_encoding
-    # validate_case__address\
-    # '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>',
-    #     :display_name => expected,
-    #     :address      => 'aamine@loveruby.net',
-    #     :local        => 'aamine',
-    #     :domain       => 'loveruby.net',
-    #     :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
+    TMail.KCODE = 'EUC'
+    expected = "\306\374\313\334\270\354"
+    expected.force_encoding('EUC-JP') if expected.respond_to? :force_encoding
+    validate_case__address\
+    '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>',
+        :display_name => expected,
+        :address      => 'aamine@loveruby.net',
+        :local        => 'aamine',
+        :domain       => 'loveruby.net',
+        :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
 
-    # validate_case__address\
-    # '=?iso-2022-jp?Q?=1b=24=42=46=7c=4b=5c=38=6c=1b=28=42?= <aamine@loveruby.net>',
-    #     :display_name => expected,
-    #     :address      => 'aamine@loveruby.net',
-    #     :local        => 'aamine',
-    #     :domain       => 'loveruby.net',
-    #     :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
+    validate_case__address\
+    '=?iso-2022-jp?Q?=1b=24=42=46=7c=4b=5c=38=6c=1b=28=42?= <aamine@loveruby.net>',
+        :display_name => expected,
+        :address      => 'aamine@loveruby.net',
+        :local        => 'aamine',
+        :domain       => 'loveruby.net',
+        :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
 
-    # TMail.KCODE = 'SJIS'
-    # expected = "\223\372\226{\214\352"
-    # expected.force_encoding('Windows-31J') if expected.respond_to? :force_encoding
-    # validate_case__address\
-    # '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>',
-    #     :display_name => expected,
-    #     :address      => 'aamine@loveruby.net',
-    #     :local        => 'aamine',
-    #     :domain       => 'loveruby.net',
-    #     :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
+    TMail.KCODE = 'SJIS'
+    expected = "\223\372\226{\214\352"
+    expected.force_encoding('Windows-31J') if expected.respond_to? :force_encoding
+    validate_case__address\
+    '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>',
+        :display_name => expected,
+        :address      => 'aamine@loveruby.net',
+        :local        => 'aamine',
+        :domain       => 'loveruby.net',
+        :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
 
-    # validate_case__address\
-    # '=?iso-2022-jp?Q?=1b=24=42=46=7c=4b=5c=38=6c=1b=28=42?= <aamine@loveruby.net>',
-    #     :display_name => expected,
-    #     :address      => 'aamine@loveruby.net',
-    #     :local        => 'aamine',
-    #     :domain       => 'loveruby.net',
-    #     :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
+    validate_case__address\
+    '=?iso-2022-jp?Q?=1b=24=42=46=7c=4b=5c=38=6c=1b=28=42?= <aamine@loveruby.net>',
+        :display_name => expected,
+        :address      => 'aamine@loveruby.net',
+        :local        => 'aamine',
+        :domain       => 'loveruby.net',
+        :format       => '=?iso-2022-jp?B?GyRCRnxLXDhsGyhC?= <aamine@loveruby.net>'
   end
   end
 
-  # def test_parse__rawjp
-  #   begin
-  #     TMail.KCODE = 'EUC'
-  #     _test_parse__euc
-  #     _test_parse__jis
-  #   ensure
-  #     TMail.KCODE = 'NONE'
-  #   end
-  # end
+  def test_parse__rawjp
+    begin
+      TMail.KCODE = 'EUC'
+      _test_parse__euc
+      _test_parse__jis
+    ensure
+      TMail.KCODE = 'NONE'
+    end
+  end
 
   def _test_parse__euc
     # raw EUC-JP
