@@ -61,22 +61,25 @@ module TMail
     comment_without_iso2022 = /\A[^\\()]+/n
 
     PATTERN_TABLE = {}
-    PATTERN_TABLE['EUC'] =
-      [
-        /\A(?:[#{atomchars}]+|#{iso2022str}|#{eucstr})+/n,
-        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{eucstr})+/n,
-        quoted_with_iso2022,
-        domlit_with_iso2022,
-        comment_with_iso2022
-      ]
-    PATTERN_TABLE['SJIS'] =
-      [
-        /\A(?:[#{atomchars}]+|#{iso2022str}|#{sjisstr})+/n,
-        /\A(?:[#{tokenchars}]+|#{iso2022str}|#{sjisstr})+/n,
-        quoted_with_iso2022,
-        domlit_with_iso2022,
-        comment_with_iso2022
-      ]
+    # Note: These patterns are causing breaking changes with the newer version of rack and we do not use them
+    # We will also stop using tmail as soon as wel move to rails 3.2 LTS so this should not have any impact.
+
+    # PATTERN_TABLE['EUC'] =
+    #   [
+    #     /\A(?:[#{atomchars}]+|#{iso2022str}|#{eucstr})+/n,
+    #     /\A(?:[#{tokenchars}]+|#{iso2022str}|#{eucstr})+/n,
+    #     quoted_with_iso2022,
+    #     domlit_with_iso2022,
+    #     comment_with_iso2022
+    #   ]
+    # PATTERN_TABLE['SJIS'] =
+    #   [
+    #     /\A(?:[#{atomchars}]+|#{iso2022str}|#{sjisstr})+/n,
+    #     /\A(?:[#{tokenchars}]+|#{iso2022str}|#{sjisstr})+/n,
+    #     quoted_with_iso2022,
+    #     domlit_with_iso2022,
+    #     comment_with_iso2022
+    #   ]
     PATTERN_TABLE['UTF8'] =
       [
         /\A(?:[#{atomchars}]+|#{utf8str})+/n,

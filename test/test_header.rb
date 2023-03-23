@@ -155,16 +155,16 @@ class AddressHeaderTester < Test::Unit::TestCase
           :routes => [],
           :spec => 'hoge@example.jp'}]
     }
-    
+
     validate_case 'Mikel <mikel@me.org>, another Mikel <mikel@you.org>',
-        false, 
+        false,
         'Mikel <mikel@me.org>, another Mikel <mikel@you.org>',
         [],
-    [{  :phrase => 'Mikel', 
-        :routes => [], 
+    [{  :phrase => 'Mikel',
+        :routes => [],
         :spec   => 'mikel@me.org' },
-     {  :phrase => 'another Mikel', 
-        :routes => [], 
+     {  :phrase => 'another Mikel',
+        :routes => [],
         :spec   => 'mikel@you.org' }]
   end
 end
@@ -833,113 +833,113 @@ class ContentDispositionHeaderTester < Test::Unit::TestCase
     assert_equal 'a; n="()<>[];:@\\\\,\"/?="', h.encoded
   end
 
-  def _test_rfc2231_decode
-    TMail.KCODE = 'EUC'
+  # def _test_rfc2231_decode
+  #   TMail.KCODE = 'EUC'
 
-    h = TMail::HeaderField.new('Content-Disposition',
-            "attachment; filename*=iso-2022-jp'ja'%1b$B$Q$i$`%1b%28B")
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    expected = "\244\321\244\351\244\340"
-    expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
-    assert_equal expected, h.params['filename']
-  end
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           "attachment; filename*=iso-2022-jp'ja'%1b$B$Q$i$`%1b%28B")
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   expected = "\244\321\244\351\244\340"
+  #   expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
+  #   assert_equal expected, h.params['filename']
+  # end
 
-  def _test_rfc2231_encode
-    TMail.KCODE = 'EUC'
+  # def _test_rfc2231_encode
+  #   TMail.KCODE = 'EUC'
 
-    h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
-    h['n'] = "\245\265\245\363\245\327\245\353.txt"
-    assert_equal "a; n*=iso-2022-jp'ja'%1B$B%255%25s%25W%25k%1B%28B.txt",
-                h.encoded
+  #   h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
+  #   h['n'] = "\245\265\245\363\245\327\245\353.txt"
+  #   assert_equal "a; n*=iso-2022-jp'ja'%1B$B%255%25s%25W%25k%1B%28B.txt",
+  #               h.encoded
 
-    h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
-    h['n'] = "\245\265()<>[];:@\\,\"/?=%*'"
-    assert_equal "a;\r\n\tn*=iso-2022-jp'ja'%1B$B%255%1B%28B%28%29%3C%3E%5B%5D%3B%3A%40%5C%2C%22%2F%3F%3D%25%2A%27",
-                h.encoded
-  end
+  #   h = TMail::HeaderField.new('Content-Disposition', 'a; n=a')
+  #   h['n'] = "\245\265()<>[];:@\\,\"/?=%*'"
+  #   assert_equal "a;\r\n\tn*=iso-2022-jp'ja'%1B$B%255%1B%28B%28%29%3C%3E%5B%5D%3B%3A%40%5C%2C%22%2F%3F%3D%25%2A%27",
+  #               h.encoded
+  # end
 
-  def _test_raw_iso2022jp
-    TMail.KCODE = 'EUC'
-    # raw iso2022jp string in value (token)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    # assert_equal "\e$BF|K\\8l\e(B.doc", h.params['filename']
+  # def _test_raw_iso2022jp
+  #   TMail.KCODE = 'EUC'
+  #   # raw iso2022jp string in value (token)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   # assert_equal "\e$BF|K\\8l\e(B.doc", h.params['filename']
 
-    expected = "\306\374\313\334\270\354.doc"
-    expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
+  #   expected = "\306\374\313\334\270\354.doc"
+  #   expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
 
-    assert_equal expected, h.params['filename']
+  #   assert_equal expected, h.params['filename']
 
-    # raw iso2022jp string in value (quoted string)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename="\e$BF|K\\8l\e(B.doc">)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    # assert_equal "\e$BF|K\\8l\e(B.doc", h.params['filename']
-    assert_equal expected, h.params['filename']
-  end
+  #   # raw iso2022jp string in value (quoted string)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename="\e$BF|K\\8l\e(B.doc">)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   # assert_equal "\e$BF|K\\8l\e(B.doc", h.params['filename']
+  #   assert_equal expected, h.params['filename']
+  # end
 
-  def _test_raw_eucjp
-    TMail.KCODE = 'EUC'
-    # raw EUC-JP string in value (token)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename=\306\374\313\334\270\354.doc>)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    expected = "\306\374\313\334\270\354.doc"
-    expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
-    assert_equal expected, h.params['filename']
+  # def _test_raw_eucjp
+  #   TMail.KCODE = 'EUC'
+  #   # raw EUC-JP string in value (token)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename=\306\374\313\334\270\354.doc>)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   expected = "\306\374\313\334\270\354.doc"
+  #   expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
+  #   assert_equal expected, h.params['filename']
 
-    # raw EUC-JP string in value (quoted-string)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename="\306\374\313\334\270\354.doc">)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    assert_equal expected, h.params['filename']
-  end
+  #   # raw EUC-JP string in value (quoted-string)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename="\306\374\313\334\270\354.doc">)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   assert_equal expected, h.params['filename']
+  # end
 
-  def _test_raw_sjis
-    TMail.KCODE = 'SJIS'
-    # raw SJIS string in value (token)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename=\223\372\226{\214\352.doc>)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    expected = "\223\372\226{\214\352.doc"
-    expected.force_encoding 'Windows-31J' if expected.respond_to? :force_encoding
-    assert_equal expected, h.params['filename']
+  # def _test_raw_sjis
+  #   TMail.KCODE = 'SJIS'
+  #   # raw SJIS string in value (token)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename=\223\372\226{\214\352.doc>)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   expected = "\223\372\226{\214\352.doc"
+  #   expected.force_encoding 'Windows-31J' if expected.respond_to? :force_encoding
+  #   assert_equal expected, h.params['filename']
 
-    # raw SJIS string in value (quoted-string)
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename="\223\372\226{\214\352.doc">)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    assert_equal expected, h.params['filename']
-  end
+  #   # raw SJIS string in value (quoted-string)
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename="\223\372\226{\214\352.doc">)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   assert_equal expected, h.params['filename']
+  # end
 
-  def _test_code_conversion
-    # JIS -> TMail.KCODE auto conversion
-    TMail.KCODE = 'EUC'
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    expected = "\306\374\313\334\270\354.doc"
-    expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
-    assert_equal expected, h.params['filename']
+  # def _test_code_conversion
+  #   # JIS -> TMail.KCODE auto conversion
+  #   TMail.KCODE = 'EUC'
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   expected = "\306\374\313\334\270\354.doc"
+  #   expected.force_encoding 'EUC-JP' if expected.respond_to? :force_encoding
+  #   assert_equal expected, h.params['filename']
 
-    TMail.KCODE = 'SJIS'
-    h = TMail::HeaderField.new('Content-Disposition',
-            %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
-    assert_equal 'attachment', h.disposition
-    assert_equal 1, h.params.size
-    expected = "\223\372\226{\214\352.doc"
-    expected.force_encoding 'Windows-31J' if expected.respond_to? :force_encoding
-    assert_equal expected, h.params['filename']
-  end
+  #   TMail.KCODE = 'SJIS'
+  #   h = TMail::HeaderField.new('Content-Disposition',
+  #           %Q<attachment; filename=\e$BF|K\\8l\e(B.doc>)
+  #   assert_equal 'attachment', h.disposition
+  #   assert_equal 1, h.params.size
+  #   expected = "\223\372\226{\214\352.doc"
+  #   expected.force_encoding 'Windows-31J' if expected.respond_to? :force_encoding
+  #   assert_equal expected, h.params['filename']
+  # end
 
   def test_disposition=
     h = TMail::HeaderField.new('Content-Disposition',
