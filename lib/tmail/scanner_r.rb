@@ -63,7 +63,7 @@ module TMail
     PATTERN_TABLE = {}
     PATTERN_TABLE['EUC'] =
       [
-        /\A(?:[#{atomchars}]+|#{iso2022str})+/n,
+        /\A(?:[#{atomchars}]+|#{iso2022str}|#{eucstr})+/n,
         /\A(?:[#{tokenchars}]+|#{iso2022str}|#{eucstr})+/n,
         quoted_with_iso2022,
         domlit_with_iso2022,
