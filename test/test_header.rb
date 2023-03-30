@@ -155,16 +155,16 @@ class AddressHeaderTester < Test::Unit::TestCase
           :routes => [],
           :spec => 'hoge@example.jp'}]
     }
-    
+
     validate_case 'Mikel <mikel@me.org>, another Mikel <mikel@you.org>',
-        false, 
+        false,
         'Mikel <mikel@me.org>, another Mikel <mikel@you.org>',
         [],
-    [{  :phrase => 'Mikel', 
-        :routes => [], 
+    [{  :phrase => 'Mikel',
+        :routes => [],
         :spec   => 'mikel@me.org' },
-     {  :phrase => 'another Mikel', 
-        :routes => [], 
+     {  :phrase => 'another Mikel',
+        :routes => [],
         :spec   => 'mikel@you.org' }]
   end
 end
